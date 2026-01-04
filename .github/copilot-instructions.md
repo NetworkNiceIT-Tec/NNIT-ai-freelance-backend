@@ -5,61 +5,79 @@
 ---
 
 ## Quick summary
-- This repo contains small bootstrap examples for different stacks; the `feat/bootstrap-nodejs` branch includes a Node.js example using Express + Jest + Supertest.
+- This repo is intended to host small bootstrap examples for different stacks. A Node.js example exists in branches used by maintainers; agents should either propose a minimal bootstrap or open an issue to confirm the desired stack.
 - Primary job for agents: propose minimal, focused bootstrap PRs (one small service + tests + CI) or open an issue to clarify requirements before larger changes.
 
 ---
 
 ## First actions (must do before coding)
-1. Inspect the repo root for language manifests and CI config files (`package.json`, `pyproject.toml`, `go.mod`, `Dockerfile`, `.github/workflows/*`).
-2. Read `README.md` and `CONTRIBUTING.md` to confirm the preferred workflow for bootstraps and PR size.
+1. Inspect the repo root for language manifests and CI config files (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `Dockerfile`, `Makefile`, `.github/workflows/*`).
+2. Read `README.md` and `CONTRIBUTING.md` to confirm the preferred workflow for bootstraps and PR size (if missing, suggest adding them as part of a bootstrap PR).
 3. If a language-specific example already exists in a branch (e.g., `feat/bootstrap-nodejs`), read those files to copy local patterns (see `src/index.js`, `test/health.test.js`).
-4. For non-trivial changes open an issue describing design and constraints and wait for maintainers to confirm before implementing.
+4. For non-trivial changes, open an issue describing design and constraints and wait for maintainers to confirm before implementing.
 
 ---
 
-## Concrete project patterns (Node.js example)
-- Package scripts:
+## Bootstrap examples (per-stack guidance)
+
+### Node.js (recommended pattern)
+- Files to add: `package.json`, `src/index.js`, `test/health.test.js`, `.github/workflows/nodejs.yml`.
+- Scripts:
   - `start` -> `node src/index.js`
-  - `test` -> `jest --runInBand` (see `package.json`)
-- Test pattern: use `supertest` + `jest` to test an exported Express app. Example files: `src/index.js` (exports app; server started only when run directly) and `test/health.test.js`.
-- Keep bootstraps minimal: one small server, one test that demonstrates the pipeline, and a matching `.github/workflows/nodejs.yml` CI workflow.
+  - `test` -> `jest --runInBand`
+- Test pattern: use `supertest` + `jest` to test an exported Express `app`. Export the `app` from `src/index.js` and start the server only when run directly (module check).
+- CI: run `npm ci && npm test` on `pull_request` and `push` to `main`.
+
+### Python (FastAPI / pytest example)
+- Files to add: `pyproject.toml` or `requirements.txt`, `src/app.py` (FastAPI app), `tests/test_health.py`, `.github/workflows/python.yml`.
+- Recommended tooling: `pytest` for tests, `httpx` + `pytest-asyncio` for endpoint testing, `uvicorn` for running locally.
+- Example test pattern: import the FastAPI `app` and use `TestClient` from `starlette.testclient` or `httpx.AsyncClient` for async tests.
+- CI: run `pip install -r requirements.txt && pytest` (or `pipx`/`venv` depending on workflow).
+
+### Go (minimal module example)
+- Files to add: `go.mod`, `cmd/server/main.go` (minimal HTTP handler), `internal/` or `pkg/` packages, `*_test.go` tests, `.github/workflows/go.yml`.
+- Recommended test pattern: `go test ./...` and simple `net/http/httptest` based handler tests.
+- CI: run `go test ./...` and `go vet` as part of workflow.
 
 ---
 
 ## When proposing a bootstrap or starter PR
-- Keep changes small and focused (one service + tests + CI). Example minimal Node.js PR adds: `package.json`, `src/index.js`, `test/health.test.js`, and a simple `nodejs` workflow.
-- Include a short PR description with run/test commands and rationale for chosen dependencies.
-- Use branch names like `feat/<short-description>` or `fix/<short-description>`.
+- Keep changes small and focused (one service + tests + CI). Example minimal PR for each stack should include a README excerpt, minimal app, one test, and a matching CI workflow.
+- Provide a short PR description with run/test commands and rationale for chosen dependencies.
+- Use branch names like `feat/bootstrap-<stack>` or `feat/<short-description>`.
 
 ---
 
-## Tests, build and verification (repo-specific)
-- Use `npm install` then `npm test` (Jest configured in `package.json` uses `--runInBand` to avoid test runner worker issues in simple CI jobs).
-- The example exports the Express `app` and uses `supertest` to test endpoints — follow that pattern for new services to keep tests fast and isolated.
-- Add a GitHub Actions workflow that runs `npm ci` / `npm test` on `pull_request` and `push` to feature branches and `main`.
+## Tests, build and verification
+- Example commands by stack:
+  - Node.js: `npm ci` && `npm test`
+  - Python: `pip install -r requirements.txt` && `pytest`
+  - Go: `go test ./...`
+- Ensure CI jobs run tests on `pull_request` and `push` to `main`.
+- Keep tests fast and isolated; for HTTP apps, import the app object and use test clients instead of starting network servers when possible.
 
 ---
 
 ## Conventions & collaboration
-- Always open an issue for non-trivial or architectural changes and request human review before merging.
+- Open an issue for non-trivial or architectural changes and request maintainers' confirmation before merging.
 - Keep PRs small and use conventional commit prefixes (`feat:`, `fix:`, `chore:`).
-- Avoid large scaffolding or heavy dependencies unless maintainers approve; prefer small, focused additions.
+- Avoid heavy dependencies or large scaffolding without approval — prefer small, focused additions.
 
 ---
 
 ## What to include in the PR description (checklist)
 - Motivation and brief design notes
 - Files added/changed and why
-- Local setup and run/test commands (exact `npm` commands used)
+- Local setup and run/test commands
+- CI changes and expected outcomes
 - Any open questions for maintainers (e.g., preferred framework or runtime)
 
 ---
 
 ## Helpful references
-- Look at `src/index.js` and `test/health.test.js` for the canonical Node.js pattern in this repo.
-- Check `CONTRIBUTING.md` for repository policy on issues and PR size.
+- Node.js canonical pattern: export the `app` from `src/index.js` and test it with `supertest` in `test/health.test.js`.
+- Document new conventions (README/CONTRIBUTING) when adding a bootstrap so future agents and contributors can follow the same patterns.
 
 ---
 
-If you'd like, I can make the PR that updates this file with these repo-specific details, or iterate on wording based on any additional constraints you want documented.
+If you'd like, I can now create the minimal bootstrap PRs (Node.js, Python, Go) and add `CONTRIBUTING.md` and a PR template. Tell me whether to open all three PRs now (default license: MIT), or create an issue first to ask maintainers which stack to prioritize.
