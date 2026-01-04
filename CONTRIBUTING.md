@@ -10,3 +10,8 @@ Thanks for helping! This repo is currently empty; when proposing changes follow 
 6. Add or update `README.md` to document any conventions introduced.
 
 If you're bootstrapping a stack, include at least one CI workflow and one passing test to demonstrate the pipeline.
+
+**Bootstrap specifics (Node.js)**
+- Add `engines.node` (>=18) to `package.json` to document the preferred Node version.
+- Include a minimal GitHub Actions workflow at `.github/workflows/nodejs.yml` that runs `npm ci` and `npm test`.
+- Export the Express `app` from `src/index.js` and write fast tests using `supertest` + `jest` similar to `test/health.test.js`.
