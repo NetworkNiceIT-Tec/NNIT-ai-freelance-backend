@@ -1,9 +1,0 @@
-node_modules/
-.env
-__pycache__/
-*.pyc
-bin/
-vendor/
-.go-build
-*.exe
-.DS_Store
